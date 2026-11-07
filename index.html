@@ -55,7 +55,9 @@
   .label { font-size: 12px; color: var(--muted); margin-top: 8px; }
   .tip { font-size: 14px; line-height: 1.45; margin: 10px 0 0; }
   .note { display: inline-block; font-size: 12px; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 6px; margin-left: 4px; }
-  select { width: 100%; font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--text); margin-top: 10px; }
+  select { width: 100%; font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--text); margin-top: 4px; }
+  .btn.small { margin-top: 8px; width: 100%; font-size: 14px; }
+  .defnote { font-size: 13px; color: var(--muted); margin-top: 8px; }
   .links { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; margin-top: 8px; }
   a { color: var(--accent); }
   details { font-size: 13px; color: var(--muted); margin-top: 8px; }
@@ -114,13 +116,17 @@ function targets(item) {
   return Array.from({ length: item.sets }, (_, i) => parts.length === item.sets ? parts[i] : item.reps);
 }
 
+// Ejercicio predeterminado elegido por el usuario (o el de la rutina)
+function defaultFor(day, idx) {
+  return store.defaults?.[day]?.[idx] || ROUTINE[day].items[idx].main;
+}
+
 function entry(day, idx, create) {
-  const item = ROUTINE[day].items[idx];
   const d = store.logs[date]?.[day]?.[idx];
-  if (d || !create) return d || { ex: item.main, sets: [] };
+  if (d || !create) return d || { ex: defaultFor(day, idx), sets: [] };
   store.logs[date] ||= {};
   store.logs[date][day] ||= {};
-  return store.logs[date][day][idx] = { ex: item.main, sets: [] };
+  return store.logs[date][day][idx] = { ex: defaultFor(day, idx), sets: [] };
 }
 
 // Último peso/reps registrados para un ejercicio (antes de la fecha actual)
@@ -152,8 +158,14 @@ function card(day, idx) {
   const done = e.sets.filter(s => s?.done).length;
   const last = lastFor(e.ex);
   const yt = "https://www.youtube.com/results?search_query=" + encodeURIComponent("como hacer " + (isMain ? item.name : ex.es) + " ejercicio");
+  const def = defaultFor(day, idx);
   const options = [item.main, ...item.alts].map(id =>
-    `<option value="${id}" ${id === e.ex ? "selected" : ""}>${id === item.main ? "★ " : "↔ "}${esc(EXERCISES[id].es)}</option>`).join("");
+    `<option value="${id}" ${id === e.ex ? "selected" : ""}>${id === item.main ? "★ " : "↔ "}${esc(EXERCISES[id].es)}${id === def && def !== item.main ? " (mi predeterminado)" : ""}</option>`).join("");
+  const defUI = e.ex !== def
+    ? `<button class="btn small" data-setdef>📌 Usar siempre este ejercicio</button>`
+    : def !== item.main
+      ? `<div class="defnote">📌 Es tu predeterminado · <a href="#" data-resetdef>volver al de la rutina</a></div>`
+      : "";
 
   return `<section class="card ${done >= item.sets ? "done" : ""} ${openCards.has(idx) ? "open" : ""}" data-idx="${idx}">
     <div class="card-head" data-toggle>
@@ -172,7 +184,9 @@ function card(day, idx) {
           ${ex.secondary.length ? `<div class="label">También trabaja</div>
           <div class="chips">${ex.secondary.map(m => `<span class="chip sec">${esc(m)}</span>`).join("")}</div>` : ""}
           ${isMain ? `<p class="tip">${esc(item.tip)}</p>` : ""}
+          <div class="label">Cambiar por otro ejercicio (★ = el de la rutina)</div>
           <select data-swap aria-label="Cambiar ejercicio">${options}</select>
+          ${defUI}
           <div class="links"><a href="${yt}" target="_blank" rel="noopener">▶ Ver videos en YouTube</a></div>
           ${ex.steps.length ? `<details><summary>Instrucciones paso a paso (${esc(ex.en)}, en inglés)</summary><ol>${ex.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol></details>` : ""}
         </div>
@@ -245,6 +259,18 @@ $("#main").addEventListener("click", ev => {
   if (t.closest("[data-toggle]")) {
     openCards.has(idx) ? openCards.delete(idx) : openCards.add(idx);
     cardEl.classList.toggle("open"); return;
+  }
+  if (t.closest("[data-setdef], [data-resetdef]")) {
+    ev.preventDefault();
+    const item = ROUTINE[tab].items[idx];
+    const ex = t.closest("[data-setdef]") ? entry(tab, idx, false).ex : item.main;
+    store.defaults ||= {};
+    store.defaults[tab] ||= {};
+    if (ex === item.main) delete store.defaults[tab][idx]; else store.defaults[tab][idx] = ex;
+    // Aplicarlo también al registro de hoy si todavía no hay series cargadas
+    const e = entry(tab, idx, true);
+    if (!e.sets.some(s => s?.done)) e.ex = ex;
+    save(); openCards.add(idx); renderDay(); return;
   }
   if (t.dataset.f === "done") {
     const i = +t.closest("tr").dataset.set;
