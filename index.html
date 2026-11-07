@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mi Rutina</title>
+<meta name="theme-color" content="#111827">
+<style>
+  :root {
+    --bg: #f4f5f7; --card: #fff; --text: #111827; --muted: #6b7280; --line: #e5e7eb;
+    --accent: #2563eb; --accent-soft: #dbeafe; --ok: #16a34a; --ok-soft: #dcfce7; --chip2: #f3f4f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0f17; --card: #151b26; --text: #e5e7eb; --muted: #9ca3af; --line: #263041;
+      --accent: #60a5fa; --accent-soft: #1e3a5f; --ok: #4ade80; --ok-soft: #14361f; --chip2: #1f2937;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
+  header { position: sticky; top: 0; z-index: 5; background: var(--card); border-bottom: 1px solid var(--line); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+  .top { display: flex; align-items: center; gap: 12px; padding: 12px 0 8px; }
+  h1 { font-size: 20px; margin: 0; flex: 1; }
+  input[type=date] { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text); }
+  nav { display: flex; gap: 6px; padding-bottom: 10px; overflow-x: auto; }
+  nav button { flex: 1; min-width: 70px; font: inherit; font-weight: 600; padding: 8px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--text); cursor: pointer; white-space: nowrap; }
+  nav button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .progress { height: 4px; background: var(--line); }
+  .progress div { height: 100%; background: var(--ok); width: 0; transition: width .3s; }
+  main { padding: 16px 0 60px; }
+  h2 { font-size: 17px; margin: 4px 0 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 14px; overflow: hidden; }
+  .card.done { border-color: var(--ok); }
+  .card-head { display: flex; gap: 10px; align-items: center; padding: 12px 14px; cursor: pointer; }
+  .num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-weight: 700; font-size: 14px; flex: none; }
+  .card.done .num { background: var(--ok-soft); color: var(--ok); }
+  .title { flex: 1; min-width: 0; }
+  .title b { display: block; font-size: 16px; }
+  .title small { color: var(--muted); }
+  .chev { color: var(--muted); transition: transform .2s; }
+  .card.open .chev { transform: rotate(90deg); }
+  .body { display: none; padding: 0 14px 14px; }
+  .card.open .body { display: block; }
+  .media { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+  @media (max-width: 560px) { .media { grid-template-columns: 1fr; } }
+  .anim { position: relative; width: 100%; aspect-ratio: 4/3; border-radius: 10px; overflow: hidden; background: #fff; border: 1px solid var(--line); }
+  .anim img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .25s; }
+  .anim img.show { opacity: 1; }
+  .anim .tag { position: absolute; left: 6px; bottom: 6px; font-size: 11px; background: rgba(0,0,0,.6); color: #fff; padding: 2px 6px; border-radius: 6px; }
+  .exname { font-weight: 600; margin: 0 0 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
+  .chip { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .chip.sec { background: var(--chip2); color: var(--muted); font-weight: 500; }
+  .label { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .tip { font-size: 14px; line-height: 1.45; margin: 10px 0 0; }
+  .note { display: inline-block; font-size: 12px; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 6px; margin-left: 4px; }
+  select { width: 100%; font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--text); margin-top: 10px; }
+  .links { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; margin-top: 8px; }
+  a { color: var(--accent); }
+  details { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  details ol { padding-left: 18px; margin: 6px 0 0; }
+  table.sets { width: 100%; border-collapse: collapse; margin-top: 14px; }
+  table.sets th { font-size: 12px; color: var(--muted); font-weight: 600; text-align: left; padding: 4px; }
+  table.sets td { padding: 4px; }
+  table.sets input[type=number] { width: 100%; font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--text); }
+  .check { width: 38px; height: 38px; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); cursor: pointer; font-size: 18px; color: transparent; }
+  .check.on { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .last { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .hist-day { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+  .hist-day h3 { margin: 0 0 6px; font-size: 15px; }
+  .hist-day ul { margin: 0; padding-left: 18px; font-size: 14px; }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 18px; }
+  .btn { font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--text); cursor: pointer; }
+  footer { font-size: 12px; color: var(--muted); text-align: center; padding: 20px 16px 40px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <h1>💪 Mi Rutina</h1>
+      <input type="date" id="date" aria-label="Fecha">
+    </div>
+    <nav id="tabs"></nav>
+  </div>
+  <div class="progress"><div id="bar"></div></div>
+</header>
+<main class="wrap" id="main"></main>
+<footer>
+  Imágenes e instrucciones: <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noopener">free-exercise-db</a> (dominio público).
+  Tus datos se guardan solo en este navegador.
+</footer>
+
+<script src="data.js"></script>
+<script>
+const IMG = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
+const KEY = "rutina-gym-v1";
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+let store = {};
+try { store = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
+store.logs ||= {};      // logs[fecha][dia][idx] = {ex, sets:[{reps,kg,done}]}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
+
+const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+let date = today();
+let tab = store.tab ?? 0;
+const openCards = new Set();
+
+function targets(item) {
+  const parts = item.reps.split("-").map(s => s.trim());
+  return Array.from({ length: item.sets }, (_, i) => parts.length === item.sets ? parts[i] : item.reps);
+}
+
+function entry(day, idx, create) {
+  const item = ROUTINE[day].items[idx];
+  const d = store.logs[date]?.[day]?.[idx];
+  if (d || !create) return d || { ex: item.main, sets: [] };
+  store.logs[date] ||= {};
+  store.logs[date][day] ||= {};
+  return store.logs[date][day][idx] = { ex: item.main, sets: [] };
+}
+
+// Último peso/reps registrados para un ejercicio (antes de la fecha actual)
+function lastFor(exId) {
+  const dates = Object.keys(store.logs).filter(d => d < date).sort().reverse();
+  for (const d of dates) for (const day of Object.values(store.logs[d]))
+    for (const e of Object.values(day))
+      if (e.ex === exId && e.sets.some(s => s?.done)) return { date: d, sets: e.sets.filter(s => s?.done) };
+  return null;
+}
+
+function renderTabs() {
+  const names = ROUTINE.map((_, i) => `Día ${i + 1}`).concat("Historial");
+  $("#tabs").innerHTML = names.map((n, i) => `<button class="${i === tab ? "on" : ""}" data-t="${i}">${n}</button>`).join("");
+}
+
+function anim(ex) {
+  return `<div class="anim" data-anim>${ex.images.map((src, i) =>
+    `<img src="${IMG + src}" alt="${esc(ex.es)} ${i ? "final" : "inicio"}" loading="lazy" class="${i ? "" : "show"}">`).join("")}
+    <span class="tag">${esc(ex.equipment)}</span></div>`;
+}
+
+function card(day, idx) {
+  const item = ROUTINE[day].items[idx];
+  const e = entry(day, idx, false);
+  const ex = EXERCISES[e.ex];
+  const isMain = e.ex === item.main;
+  const tg = targets(item);
+  const done = e.sets.filter(s => s?.done).length;
+  const last = lastFor(e.ex);
+  const yt = "https://www.youtube.com/results?search_query=" + encodeURIComponent("como hacer " + (isMain ? item.name : ex.es) + " ejercicio");
+  const options = [item.main, ...item.alts].map(id =>
+    `<option value="${id}" ${id === e.ex ? "selected" : ""}>${id === item.main ? "★ " : "↔ "}${esc(EXERCISES[id].es)}</option>`).join("");
+
+  return `<section class="card ${done >= item.sets ? "done" : ""} ${openCards.has(idx) ? "open" : ""}" data-idx="${idx}">
+    <div class="card-head" data-toggle>
+      <span class="num">${done >= item.sets ? "✓" : idx + 1}</span>
+      <div class="title"><b>${esc(item.name)}${isMain ? "" : " <small>→ " + esc(ex.es) + "</small>"}</b>
+        <small>${item.sets} × ${esc(item.reps)} · ${esc(ex.primary.join(", "))} · ${done}/${item.sets} series</small></div>
+      <span class="chev">›</span>
+    </div>
+    <div class="body">
+      <div class="media">
+        ${anim(ex)}
+        <div>
+          <p class="exname">${esc(ex.es)} ${item.note ? `<span class="note">${esc(item.note)}</span>` : ""}</p>
+          <div class="label">Músculo principal</div>
+          <div class="chips">${ex.primary.map(m => `<span class="chip">${esc(m)}</span>`).join("")}</div>
+          ${ex.secondary.length ? `<div class="label">También trabaja</div>
+          <div class="chips">${ex.secondary.map(m => `<span class="chip sec">${esc(m)}</span>`).join("")}</div>` : ""}
+          ${isMain ? `<p class="tip">${esc(item.tip)}</p>` : ""}
+          <select data-swap aria-label="Cambiar ejercicio">${options}</select>
+          <div class="links"><a href="${yt}" target="_blank" rel="noopener">▶ Ver videos en YouTube</a></div>
+          ${ex.steps.length ? `<details><summary>Instrucciones paso a paso (${esc(ex.en)}, en inglés)</summary><ol>${ex.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol></details>` : ""}
+        </div>
+      </div>
+      <table class="sets">
+        <tr><th>Serie</th><th>Reps</th><th>Peso (kg)</th><th></th></tr>
+        ${tg.map((t, i) => { const s = e.sets[i] || {}; const prevKg = last?.sets[i]?.kg ?? last?.sets.at(-1)?.kg ?? "";
+          return `<tr data-set="${i}"><td>${i + 1}</td>
+            <td><input type="number" inputmode="numeric" min="0" placeholder="${esc(t)}" value="${s.reps ?? ""}" data-f="reps"></td>
+            <td><input type="number" inputmode="decimal" min="0" step="0.5" placeholder="${esc(prevKg)}" value="${s.kg ?? ""}" data-f="kg"></td>
+            <td><button class="check ${s.done ? "on" : ""}" data-f="done" aria-label="Serie hecha">✓</button></td></tr>`; }).join("")}
+      </table>
+      ${last ? `<div class="last">Última vez (${last.date}): ${last.sets.map(s => `${s.reps || "?"}×${s.kg || 0}kg`).join(", ")}</div>` : ""}
+    </div>
+  </section>`;
+}
+
+function renderDay() {
+  const day = ROUTINE[tab];
+  $("#main").innerHTML = `<h2>${esc(day.title)}</h2>` + day.items.map((_, i) => card(tab, i)).join("");
+  updateBar();
+}
+
+function updateBar() {
+  if (tab >= ROUTINE.length) { $("#bar").style.width = 0; return; }
+  const items = ROUTINE[tab].items;
+  const total = items.reduce((a, it) => a + it.sets, 0);
+  const done = items.reduce((a, _, i) => a + entry(tab, i, false).sets.filter(s => s?.done).length, 0);
+  $("#bar").style.width = (100 * done / total) + "%";
+}
+
+function renderHistory() {
+  const dates = Object.keys(store.logs).sort().reverse();
+  let html = `<h2>Historial</h2><div class="btns">
+    <button class="btn" data-export>⬇ Exportar datos</button>
+    <label class="btn">⬆ Importar<input type="file" accept="application/json" data-import hidden></label></div>`;
+  const rows = [];
+  for (const d of dates) for (const [day, items] of Object.entries(store.logs[d])) {
+    const lines = Object.entries(items).map(([i, e]) => {
+      const sets = e.sets.filter(s => s?.done);
+      if (!sets.length) return "";
+      const name = e.ex === ROUTINE[day].items[i].main ? ROUTINE[day].items[i].name : EXERCISES[e.ex].es;
+      return `<li><b>${esc(name)}</b>: ${sets.map(s => `${s.reps || "?"}×${s.kg || 0}kg`).join(", ")}</li>`;
+    }).join("");
+    if (lines) rows.push(`<div class="hist-day"><h3>${d} · Día ${+day + 1}</h3><ul>${lines}</ul></div>`);
+  }
+  $("#main").innerHTML = html + (rows.join("") || "<p>Todavía no registraste ninguna serie.</p>");
+  updateBar();
+}
+
+function render() { renderTabs(); tab < ROUTINE.length ? renderDay() : renderHistory(); }
+
+// Eventos
+$("#tabs").addEventListener("click", ev => {
+  const b = ev.target.closest("button"); if (!b) return;
+  tab = +b.dataset.t; store.tab = tab; save(); openCards.clear(); render(); scrollTo(0, 0);
+});
+$("#date").value = date;
+$("#date").addEventListener("change", ev => { date = ev.target.value || today(); render(); });
+
+$("#main").addEventListener("click", ev => {
+  const t = ev.target;
+  if (t.closest("[data-export]")) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(store, null, 1)], { type: "application/json" }));
+    a.download = `rutina-${today()}.json`; a.click(); return;
+  }
+  const cardEl = t.closest(".card"); if (!cardEl) return;
+  const idx = +cardEl.dataset.idx;
+  if (t.closest("[data-toggle]")) {
+    openCards.has(idx) ? openCards.delete(idx) : openCards.add(idx);
+    cardEl.classList.toggle("open"); return;
+  }
+  if (t.dataset.f === "done") {
+    const i = +t.closest("tr").dataset.set;
+    const e = entry(tab, idx, true);
+    const s = e.sets[i] ||= {};
+    s.done = !s.done;
+    // Si no cargó nada, usar el objetivo / el peso de la última vez
+    const row = t.closest("tr");
+    if (s.done && s.reps == null) { const v = parseInt(row.querySelector("[data-f=reps]").placeholder); if (!isNaN(v)) s.reps = v; }
+    if (s.done && s.kg == null) {
+      const prev = e.sets.slice(0, i).reverse().find(p => p?.kg != null);
+      const v = prev ? prev.kg : parseFloat(row.querySelector("[data-f=kg]").placeholder);
+      if (!isNaN(v)) s.kg = v;
+    }
+    for (let k = 0; k < e.sets.length; k++) e.sets[k] ||= {};
+    save(); openCards.add(idx); renderDay();
+  }
+});
+
+$("#main").addEventListener("change", ev => {
+  const t = ev.target;
+  if (t.matches("[data-import]")) {
+    const f = t.files[0]; if (!f) return;
+    f.text().then(txt => { const d = JSON.parse(txt); if (d.logs) { store = d; save(); render(); } })
+      .catch(() => alert("Archivo inválido"));
+    return;
+  }
+  const cardEl = t.closest(".card"); if (!cardEl) return;
+  const idx = +cardEl.dataset.idx;
+  const e = entry(tab, idx, true);
+  if (t.matches("[data-swap]")) { e.ex = t.value; save(); openCards.add(idx); renderDay(); return; }
+  const f = t.dataset.f;
+  if (f === "reps" || f === "kg") {
+    const i = +t.closest("tr").dataset.set;
+    for (let k = 0; k <= i; k++) e.sets[k] ||= {};
+    e.sets[i][f] = t.value === "" ? null : +t.value;
+    save();
+  }
+});
+
+// "GIF": alterna las fotos de inicio y final del movimiento
+setInterval(() => {
+  document.querySelectorAll(".card.open [data-anim]").forEach(a => {
+    const imgs = a.querySelectorAll("img");
+    if (imgs.length < 2) return;
+    imgs.forEach(img => img.classList.toggle("show"));
+  });
+}, 900);
+
+render();
+</script>
+</body>
+</html>
